@@ -79,6 +79,7 @@ policies:
     filters:
       - type: metrics
         name: DatabaseConnections
+        statistics: Sum
         days: 14
         value: 0
         op: equal
