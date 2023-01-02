@@ -1,4 +1,7 @@
 policies:
+# EC2
+# CPU < 1% for 3 days
+# Created at least 3 days ago
   - name: ec2-underutilized
     resource: ec2
     filters:
@@ -8,8 +11,88 @@ policies:
         value: 1
         days: 3
         op: less-than
-  - name: iam-role-in-use
+      - type: instance-age
+        days: 3
+        op: ge
+
+# IAM role
+  - name: iam-role-unused
     resource: iam-role
     filters:
       - type: used
         state: false
+
+# EBS volume
+  - name: ebs-unattached
+    resource: ebs
+    filters:
+      - Attachments: []
+
+# EIP
+  - name: eip-unused
+    resource: network-addr
+    filters:
+      - type: value
+        key: InstanceId
+        value: absent
+      - type: value
+        key: AssociationId
+        value: absent
+
+# ELB
+# No instances attached
+# Created at least 3 days ago
+  - name: elb-classic-unused
+    resource: elb
+    filters:
+      - Instances: []
+      - type: value
+        key: CreatedTime
+        value_type: age
+        op: ge
+        value: 3
+
+# ELB v2
+# Processed bytes = 0 for 3 days
+# Created at least 3 days ago
+  - name: elb-v2-unused
+    resource: app-elb
+    filters:
+      - type: metrics
+        name: ProcessedBytes
+        statistics: Sum
+        days: 3
+        value: 0
+        missing-value: 0
+        op: equal
+      - type: value
+        key: CreatedTime
+        value_type: age
+        op: ge
+        value: 3
+
+# RDS
+# Number of connections = 0 for 14 days
+# Created at least 14 days ago
+  - name: rds-unused
+    resource: rds
+    filters:
+      - type: metrics
+        name: DatabaseConnections
+        days: 14
+        value: 0
+        op: equal
+      - type: value
+        value_type: age
+        key: InstanceCreateTime
+        value: 14
+        op: ge
+
+# EBS
+# Created at least 30 days ago
+  - name: ebs-old-snapshot
+    resource: ebs-snapshot
+    filters:
+      - type: age
+        days: 30
+        op: ge
