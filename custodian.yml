@@ -1,0 +1,15 @@
+policies:
+  - name: ec2-underutilized
+    resource: ec2
+    filters:
+      - type: metrics
+        name: CPUUtilization
+        statistics: Minimum
+        value: 1
+        days: 3
+        op: less-than
+  - name: iam-role-in-use
+    resource: iam-role
+    filters:
+      - type: used
+        state: false
