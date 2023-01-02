@@ -174,3 +174,21 @@ policies:
         key: LastModified
         value: 7
         op: ge
+
+# MQ broker
+# Current connections = 0 in the past 7 days
+# Created at least 7 days ago
+  - name: message-broker-unused
+    resource: message-broker
+    filters:
+      - type: metrics
+        name: CurrentConnectionsCount
+        days: 7
+        value: 0
+        op: equal
+        missing-value: 0
+      - type: value
+        value_type: age
+        key: Created
+        value: 7
+        op: ge
