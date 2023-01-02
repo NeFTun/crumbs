@@ -82,6 +82,7 @@ policies:
         days: 14
         value: 0
         op: equal
+        missing-value: 0
       - type: value
         value_type: age
         key: InstanceCreateTime
@@ -109,6 +110,7 @@ policies:
         days: 7
         value: 0
         op: equal
+        missing-value: 0
       - type: value
         value_type: age
         key: CreationDateTime
@@ -125,3 +127,31 @@ policies:
         op: greater-than
         value_type: age
         value: 90
+
+# Elasticache cluster
+# Current connections <=4 in the past 7 days
+# Created at least 7 days ago
+# Note: ElastiCache uses two to four of the connections to monitor the cluster in each case
+  - name: elasticache-cluster-unused
+    resource: cache-cluster
+    filters:
+      - type: metrics
+        name: CurrConnections
+        days: 7
+        value: 4
+        op: le
+        missing-value: 0
+      - type: value
+        value_type: age
+        key: CacheClusterCreateTime
+        value: 7
+        op: ge
+
+# Elasticache snapshot
+# Created at least 90 days ago
+  - name: elasticache-snapshot-old
+    resource: cache-snapshot
+    filters:
+      - type: age
+        days: 90
+        op: ge
