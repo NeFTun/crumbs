@@ -88,11 +88,40 @@ policies:
         value: 14
         op: ge
 
-# EBS
+# EBS snapshot
 # Created at least 30 days ago
-  - name: ebs-old-snapshot
+  - name: ebs-snapshot-old
     resource: ebs-snapshot
     filters:
       - type: age
         days: 30
         op: ge
+
+# DynamoDB table
+# Returned bytes = 0 for 7 days
+# Created at least 14 days ago
+  - name: dynamodb-table-unused
+    resource: dynamodb-table
+    filters:
+      - type: metrics
+        name: ReturnedBytes
+        statistics: Sum
+        days: 7
+        value: 0
+        op: equal
+      - type: value
+        value_type: age
+        key: CreationDateTime
+        value: 14
+        op: ge
+
+# DynamoDB backup
+# Created at least 90 days ago
+  - name: dynamodb-backup-old
+    resource: dynamodb-backup
+    filters:
+      - type: value
+        key: BackupCreationDateTime
+        op: greater-than
+        value_type: age
+        value: 90
