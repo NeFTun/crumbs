@@ -183,6 +183,7 @@ policies:
     filters:
       - type: metrics
         name: CurrentConnectionsCount
+        statistics: Sum
         days: 7
         value: 0
         op: equal
@@ -191,4 +192,32 @@ policies:
         value_type: age
         key: Created
         value: 7
+        op: ge
+
+# Redshift
+# Current connections = 0 in the past 7 days
+# Created at least 7 days ago
+  - name: redshift-unused
+    resource: redshift
+    filters:
+      - type: metrics
+        name: DatabaseConnections
+        statistics: Sum
+        days: 7
+        value: 0
+        op: equal
+        missing-value: 0
+      - type: value
+        value_type: age
+        key: ClusterCreateTime
+        value: 7
+        op: ge
+
+# Redshift snapshot
+# Created at least 90 days ago
+  - name: redshift-snapshot-old
+    resource: redshift-snapshot
+    filters:
+      - type: age
+        days: 90
         op: ge
