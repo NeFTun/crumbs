@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-pricing": "^3.241.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}

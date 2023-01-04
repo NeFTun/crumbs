@@ -1,2 +1,6 @@
 # Output directory
+build
 output
+
+# Dependencies
+node_modules

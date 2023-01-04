@@ -7,7 +7,7 @@ policies:
     filters:
       - type: metrics
         name: CPUUtilization
-        statistics: Minimum
+        statistics: Average
         value: 1
         days: 3
         op: less-than

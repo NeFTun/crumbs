@@ -1,0 +1,102 @@
+import * as AWS from "@aws-sdk/client-pricing";
+
+import ec2Underutilized from '../output/ec2-underutilized/resources.json';
+
+const client = new AWS.Pricing({ region: "us-east-1" });
+
+export type InstanceTypePricing = {
+  instanceType: string,
+  count: number,
+  pricePerInstance: string,
+}
+
+export async function getReport(): Promise<InstanceTypePricing[] | undefined> {
+  if (ec2Underutilized.length === 0) {
+    return;
+  }
+
+  const instanceTypesDist = getInstanceTypeDistribution(ec2Underutilized.map(resource => resource.InstanceType));
+  const instTypePricing: InstanceTypePricing[] = [];
+
+  for (const [instanceType, count] of Object.entries(instanceTypesDist)) {
+    const instancePrice = await fetchPrice(instanceType);
+
+    if (instancePrice !== undefined) {
+      instTypePricing.push({
+        instanceType,
+        count,
+        pricePerInstance: instancePrice
+      });
+    }
+  }
+
+  return instTypePricing;
+}
+
+function getInstanceTypeDistribution(instanceTypes: string[]): { [instanceType: string]: number } {
+  const result: { [instanceType: string]: number } = {};
+
+  for (const elem of instanceTypes) {
+    if (result[elem] === undefined) {
+      result[elem] = 1;
+    } else {
+      result[elem]++;
+    }
+  }
+
+  return result;
+}
+
+async function fetchPrice(instanceType: string): Promise<string | undefined> {
+  try {
+    const data = await client.getProducts({
+      ServiceCode: "AmazonEC2",
+      Filters: [
+        {
+          'Type': 'TERM_MATCH',
+          Field: 'location',
+          'Value': 'US East (N. Virginia)'
+        },
+        {
+          'Type': 'TERM_MATCH',
+          'Field': 'instanceType',
+          'Value': instanceType
+        },
+        {
+          'Type': 'TERM_MATCH',
+          'Field': 'capacitystatus',
+          'Value': 'Used'
+        },
+        {
+          'Type': 'TERM_MATCH',
+          'Field': 'tenancy',
+          'Value': 'Shared'
+        },
+        {
+          'Type': 'TERM_MATCH',
+          'Field': 'preInstalledSw',
+          'Value': 'NA'
+        },
+        {
+          'Type': 'TERM_MATCH',
+          'Field': 'operatingSystem',
+          'Value': 'Linux'
+        }
+      ]
+    });
+
+    // @ts-ignore
+    const priceList = JSON.parse(data.PriceList);
+
+    for (const [_, value] of Object.entries(priceList.terms.OnDemand)) {
+      // @ts-ignore
+      for (const [_, nestedValue] of Object.entries(value.priceDimensions)) {
+        // @ts-ignore
+        return nestedValue.pricePerUnit.USD;
+      }
+    }
+    // process data.
+  } catch (error) {
+    console.error(`fetchPrice: ${error}`);
+  }
+}
