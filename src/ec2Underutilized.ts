@@ -10,16 +10,17 @@ export type InstanceTypePricing = {
   pricePerInstance: string,
 }
 
-export async function getReport(): Promise<InstanceTypePricing[] | undefined> {
+export async function getReport(region: string): Promise<InstanceTypePricing[] | undefined> {
   if (ec2Underutilized.length === 0) {
     return;
   }
 
+  // @ts-ignore
   const instanceTypesDist = getInstanceTypeDistribution(ec2Underutilized.map(resource => resource.InstanceType));
   const instTypePricing: InstanceTypePricing[] = [];
 
   for (const [instanceType, count] of Object.entries(instanceTypesDist)) {
-    const instancePrice = await fetchPrice(instanceType);
+    const instancePrice = await fetchPrice(region, instanceType);
 
     if (instancePrice !== undefined) {
       instTypePricing.push({
@@ -47,15 +48,15 @@ function getInstanceTypeDistribution(instanceTypes: string[]): { [instanceType: 
   return result;
 }
 
-async function fetchPrice(instanceType: string): Promise<string | undefined> {
+async function fetchPrice(region: string, instanceType: string): Promise<string | undefined> {
   try {
     const data = await client.getProducts({
       ServiceCode: "AmazonEC2",
       Filters: [
         {
           'Type': 'TERM_MATCH',
-          Field: 'location',
-          'Value': 'US East (N. Virginia)'
+          Field: 'regionCode',
+          'Value': region
         },
         {
           'Type': 'TERM_MATCH',
