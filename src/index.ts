@@ -1,5 +1,6 @@
 import * as ec2Underutilized from "./ec2Underutilized";
 import * as ebsUnattached from "./ebsUnattached";
+import * as elbClassic from "./elbClassicUnused";
 
 const REGION = 'us-east-1';
 
@@ -30,5 +31,12 @@ const REGION = 'us-east-1';
     }, 0);
    
     console.log(`Total monthly cost: ${ebsMonthlyCost}$`);
+  }
+
+  // ELB classic
+  const elbReport = await elbClassic.getReport(REGION);
+  if (elbReport !== undefined) {
+    console.log('***ELB Classic Costs***');
+    console.log(`Total monthly cost: ${parseFloat(elbReport.price) * elbReport.numberOfELBs * 24 * 30}$`);
   }
 })();
