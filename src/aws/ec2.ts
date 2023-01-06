@@ -1,6 +1,6 @@
 import * as AWS from "@aws-sdk/client-pricing";
 
-import ec2Underutilized from '../output/ec2-underutilized/resources.json';
+import resources from '../../output/ec2-underutilized/resources.json';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -11,12 +11,12 @@ export type InstanceTypePricing = {
 }
 
 export async function getReport(region: string): Promise<InstanceTypePricing[] | undefined> {
-  if (ec2Underutilized.length === 0) {
+  if (resources.length === 0) {
     return;
   }
 
   // @ts-ignore
-  const instanceTypesDist = getInstanceTypeDistribution(ec2Underutilized.map(resource => resource.InstanceType));
+  const instanceTypesDist = getInstanceTypeDistribution(resources.map(resource => resource.InstanceType));
   const instTypePricing: InstanceTypePricing[] = [];
 
   for (const [instanceType, count] of Object.entries(instanceTypesDist)) {

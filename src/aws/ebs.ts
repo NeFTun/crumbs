@@ -1,6 +1,6 @@
 import * as AWS from "@aws-sdk/client-pricing";
 
-import ebsUnattached from '../output/ebs-unattached/resources.json';
+import resources from '../../output/ebs-unattached/resources.json';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -11,11 +11,11 @@ export type VolumeTypePricing = {
 }
 
 export async function getReport(region: string): Promise<VolumeTypePricing[] | undefined> {
-  if (ebsUnattached.length === 0) {
+  if (resources.length === 0) {
     return;
   }
 
-  const volumeTypesDist = getVolumeTypeDistribution(ebsUnattached);
+  const volumeTypesDist = getVolumeTypeDistribution(resources);
   const instTypePricing: VolumeTypePricing[] = [];
 
   for (const [volumeType, sizeInGB] of Object.entries(volumeTypesDist)) {
