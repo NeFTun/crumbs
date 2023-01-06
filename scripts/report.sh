@@ -12,3 +12,5 @@ docker run -it \
   -v $(cd ~ && pwd)/.aws/config:/home/custodian/.aws/config \
   --env-file <(env | grep "^AWS") \
   cloudcustodian/c7n run --dryrun --cache-period 0 -s /home/custodian/output /home/custodian/policy.yml
+
+npm run build && ts-node src/index.ts

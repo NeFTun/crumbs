@@ -9,6 +9,8 @@ const HRS_IN_MONTH = 730;
 const REGION = 'us-east-1';
 
 (async () => {
+  let totalCost = 0;
+
   // EC2
   const ec2Report = await ec2.getReport(REGION);
   if (ec2Report !== undefined) {
@@ -23,6 +25,8 @@ const REGION = 'us-east-1';
     }, 0);
 
     console.log(`Total monthly cost: ${ec2HourlyCost * HRS_IN_MONTH}$`);
+
+    totalCost += ec2HourlyCost * HRS_IN_MONTH;
   }
 
   // EBS
@@ -39,20 +43,30 @@ const REGION = 'us-east-1';
     }, 0);
 
     console.log(`Total monthly cost: ${ebsMonthlyCost}$`);
+
+    totalCost += ebsMonthlyCost;
   }
 
   // ELB classic
   const elbReport = await elbClassic.getReport(REGION);
   if (elbReport !== undefined) {
+    const elbMonthlyCost = parseFloat(elbReport.price) * elbReport.numberOfELBs * HRS_IN_MONTH;
+
     console.log('***ELB Classic Costs***');
-    console.log(`Total monthly cost: ${parseFloat(elbReport.price) * elbReport.numberOfELBs * HRS_IN_MONTH}$`);
+    console.log(`Total monthly cost: ${elbMonthlyCost}$`);
+
+    totalCost += elbMonthlyCost;
   }
 
   // ELB V2
   const elbV2Report = await elbV2.getReport(REGION);
   if (elbV2Report !== undefined) {
+    const elbV2MonthlyCost = parseFloat(elbV2Report.price) * elbV2Report.numberOfELBs * HRS_IN_MONTH;
+
     console.log('***ELB V2 Costs***');
-    console.log(`Total monthly cost: ${parseFloat(elbV2Report.price) * elbV2Report.numberOfELBs * HRS_IN_MONTH}$`);
+    console.log(`Total monthly cost: ${elbV2MonthlyCost}$`);
+
+    totalCost += elbV2MonthlyCost;
   }
 
   // RDS
@@ -67,5 +81,9 @@ const REGION = 'us-east-1';
     }, 0);
 
     console.log(`Total monthly cost: ${rdsHourlyCost * HRS_IN_MONTH}$`);
+
+    totalCost += rdsHourlyCost * HRS_IN_MONTH;
   }
+
+  console.log(`Total AWS cost: ${totalCost}$`);
 })();
