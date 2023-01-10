@@ -1,6 +1,6 @@
 import * as AWS from "@aws-sdk/client-pricing";
 
-import resources from '../../output/elasticache-cluster-unused/resources.json';
+import resources from '../../output/orz/us-east-1/elasticache-cluster-unused/resources.json';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 

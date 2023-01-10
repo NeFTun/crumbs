@@ -1,6 +1,6 @@
 import * as AWS from "@aws-sdk/client-pricing";
 
-import resources from '../../output/elb-v2-unused/resources.json';
+import resources from '../../output/orz/us-east-1/elb-v2-unused/resources.json';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
