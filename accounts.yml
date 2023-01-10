@@ -1,0 +1,6 @@
+accounts:
+  - account_id: "217568841556"
+    name: orz
+    regions:
+      - us-east-1
+    role: arn:aws:iam::217568841556:role/CloudCustodian
