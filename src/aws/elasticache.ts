@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/elasticache-cluster-unused/resources.json';
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -11,7 +10,9 @@ export type ClusterPricing = {
   pricePerNode: string,
 }
 
-export async function getReport(region: string): Promise<ClusterPricing[] | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<ClusterPricing[] | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/elasticache-cluster-unused/resources.json`);
+
   if (resources.length === 0) {
     return;
   }

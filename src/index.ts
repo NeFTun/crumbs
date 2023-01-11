@@ -7,103 +7,114 @@ import * as rds from "./aws/rds";
 
 // According to AWS monthly calculations 730 hours is a month
 const HRS_IN_MONTH = 730;
-const REGION = 'us-east-1';
+const REGIONS = ['us-east-1', 'eu-west-1'];
+const RESOURCE_DIR = `${__dirname}/../output/orz`;
 
 (async () => {
   let totalCost = 0;
 
-  // EC2
-  const ec2Report = await ec2.getReport(REGION);
-  if (ec2Report !== undefined) {
-    console.log('***EC2 Costs***');
+  for (const region of REGIONS) {
+    let totalCostPerRegion = 0;
 
-    const ec2Cost = ec2Report.reduce((accumulator: number, value: ec2.InstanceTypePricing) => {
-      const totalPrice = value.count * parseFloat(value.pricePerInstance) * HRS_IN_MONTH;
+    console.log(`Region: ${region}\n`);
 
-      console.log(`Instance type: ${value.instanceType}, Instance count: ${value.count} => ${totalPrice}$`);
+    // EC2
+    const ec2Report = await ec2.getReport(RESOURCE_DIR, region);
+    if (ec2Report !== undefined) {
+      console.log('***EC2 Costs***');
 
-      return accumulator + (totalPrice);
-    }, 0);
+      const ec2Cost = ec2Report.reduce((accumulator: number, value: ec2.InstanceTypePricing) => {
+        const totalPrice = value.count * parseFloat(value.pricePerInstance) * HRS_IN_MONTH;
 
-    console.log(`Total monthly cost: ${ec2Cost}$`);
+        console.log(`Instance type: ${value.instanceType}, Instance count: ${value.count} => ${totalPrice}$`);
 
-    totalCost += ec2Cost;
-  }
+        return accumulator + (totalPrice);
+      }, 0);
 
-  // EBS
-  const ebsReport = await ebs.getReport(REGION);
-  if (ebsReport !== undefined) {
-    console.log('***EBS Costs***');
+      console.log(`Total monthly cost: ${ec2Cost}$\n`);
 
-    const ebsMonthlyCost = ebsReport.reduce((accumulator: number, currentValue: ebs.VolumeTypePricing) => {
-      const totalPrice = parseFloat(currentValue.pricePerGB) * currentValue.sizeInGB;
+      totalCostPerRegion += ec2Cost;
+    }
 
-      console.log(`Volume type: ${currentValue.volumeType} => ${totalPrice}$`);
+    // EBS
+    const ebsReport = await ebs.getReport(RESOURCE_DIR, region);
+    if (ebsReport !== undefined) {
+      console.log('***EBS Costs***');
 
-      return accumulator + (totalPrice);
-    }, 0);
+      const ebsMonthlyCost = ebsReport.reduce((accumulator: number, currentValue: ebs.VolumeTypePricing) => {
+        const totalPrice = parseFloat(currentValue.pricePerGB) * currentValue.sizeInGB;
 
-    console.log(`Total monthly cost: ${ebsMonthlyCost}$`);
+        console.log(`Volume type: ${currentValue.volumeType} => ${totalPrice}$`);
 
-    totalCost += ebsMonthlyCost;
-  }
+        return accumulator + (totalPrice);
+      }, 0);
 
-  // ELB classic
-  const elbReport = await elbClassic.getReport(REGION);
-  if (elbReport !== undefined) {
-    const elbMonthlyCost = parseFloat(elbReport.price) * elbReport.numberOfELBs * HRS_IN_MONTH;
+      console.log(`Total monthly cost: ${ebsMonthlyCost}$\n`);
 
-    console.log('***ELB Classic Costs***');
-    console.log(`Total monthly cost: ${elbMonthlyCost}$`);
+      totalCostPerRegion += ebsMonthlyCost;
+    }
 
-    totalCost += elbMonthlyCost;
-  }
+    // ELB classic
+    const elbReport = await elbClassic.getReport(RESOURCE_DIR, region);
+    if (elbReport !== undefined) {
+      const elbMonthlyCost = parseFloat(elbReport.price) * elbReport.numberOfELBs * HRS_IN_MONTH;
 
-  // ELB V2
-  const elbV2Report = await elbV2.getReport(REGION);
-  if (elbV2Report !== undefined) {
-    const elbV2MonthlyCost = parseFloat(elbV2Report.price) * elbV2Report.numberOfELBs * HRS_IN_MONTH;
+      console.log('***ELB Classic Costs***');
+      console.log(`Total monthly cost: ${elbMonthlyCost}$`);
 
-    console.log('***ELB V2 Costs***');
-    console.log(`Total monthly cost: ${elbV2MonthlyCost}$`);
+      totalCostPerRegion += elbMonthlyCost;
+    }
 
-    totalCost += elbV2MonthlyCost;
-  }
+    // ELB V2
+    const elbV2Report = await elbV2.getReport(RESOURCE_DIR, region);
+    if (elbV2Report !== undefined) {
+      const elbV2MonthlyCost = parseFloat(elbV2Report.price) * elbV2Report.numberOfELBs * HRS_IN_MONTH;
 
-  // RDS
-  const rdsReport = await rds.getReport(REGION);
-  if (rdsReport?.length) {
-    console.log('***RDS Costs***');
+      console.log('***ELB V2 Costs***');
+      console.log(`Total monthly cost: ${elbV2MonthlyCost}$\n`);
 
-    const rdsCost = rdsReport.reduce((accumulator: number, value: rds.DBPricing) => {
-      const monthlyPrice = value.price * HRS_IN_MONTH;
+      totalCostPerRegion += elbV2MonthlyCost;
+    }
 
-      console.log (`Instance id: ${value.DBInstanceId} => ${monthlyPrice}$`);
+    // RDS
+    const rdsReport = await rds.getReport(RESOURCE_DIR, region);
+    if (rdsReport?.length) {
+      console.log('***RDS Costs***');
 
-      return accumulator + monthlyPrice;
-    }, 0);
+      const rdsCost = rdsReport.reduce((accumulator: number, value: rds.DBPricing) => {
+        const monthlyPrice = value.price * HRS_IN_MONTH;
 
-    console.log(`Total monthly cost: ${rdsCost}$`);
+        console.log(`Instance id: ${value.DBInstanceId} => ${monthlyPrice}$`);
 
-    totalCost += rdsCost;
-  }
+        return accumulator + monthlyPrice;
+      }, 0);
 
-  // Elasticache
-  const elasticacheReport = await elasticache.getReport(REGION);
-  if (elasticacheReport?.length) {
-    console.log('***Elasticache Costs***');
+      console.log(`Total monthly cost: ${rdsCost}$\n`);
 
-    const elasticacheCost = elasticacheReport.reduce((accumulator: number, value: elasticache.ClusterPricing) => {
-      const clusterPrice = value.numberOfNodes * parseFloat(value.pricePerNode) * HRS_IN_MONTH;
+      totalCostPerRegion += rdsCost;
+    }
 
-      console.log (`Engine: ${value.engine}, Instance type: ${value.instanceType}, Nodes: ${value.numberOfNodes} => ${clusterPrice}$`);
+    // Elasticache
+    const elasticacheReport = await elasticache.getReport(RESOURCE_DIR, region);
+    if (elasticacheReport?.length) {
+      console.log('***Elasticache Costs***');
 
-      return accumulator + clusterPrice;
-    }, 0);
+      const elasticacheCost = elasticacheReport.reduce((accumulator: number, value: elasticache.ClusterPricing) => {
+        const clusterPrice = value.numberOfNodes * parseFloat(value.pricePerNode) * HRS_IN_MONTH;
 
-    console.log(`Total monthly cost: ${elasticacheCost}$`);
+        console.log(`Engine: ${value.engine}, Instance type: ${value.instanceType}, Nodes: ${value.numberOfNodes} => ${clusterPrice}$`);
 
-    totalCost += elasticacheCost;
+        return accumulator + clusterPrice;
+      }, 0);
+
+      console.log(`Total monthly cost: ${elasticacheCost}$\n`);
+
+      totalCostPerRegion += elasticacheCost;
+    }
+
+    totalCost += totalCostPerRegion;
+
+    console.log(`Total cost on ${region}: ${totalCostPerRegion}\n\n`);
   }
 
   console.log(`************* Total AWS cost: ${totalCost}$ *************`);

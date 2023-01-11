@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/ec2-underutilized/resources.json';
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -10,7 +9,9 @@ export type InstanceTypePricing = {
   pricePerInstance: string,
 }
 
-export async function getReport(region: string): Promise<InstanceTypePricing[] | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<InstanceTypePricing[] | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/ec2-underutilized/resources.json`);
+
   if (resources.length === 0) {
     return;
   }

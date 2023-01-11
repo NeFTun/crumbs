@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/rds-unused/resources.json'; 
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -9,7 +8,9 @@ export type DBPricing = {
   price: number,
 }
 
-export async function getReport(region: string): Promise<DBPricing[] | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<DBPricing[] | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/rds-unused/resources.json`);
+
   if (resources.length === 0) {
     return;
   }

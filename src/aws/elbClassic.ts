@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/elb-classic-unused/resources.json';
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -9,18 +8,20 @@ export type ELBClassicPricing = {
   price: string,
 }
 
-export async function getReport(region: string): Promise<ELBClassicPricing | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<ELBClassicPricing | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/elb-classic-unused/resources.json`);
+
   if (resources.length === 0) {
     return;
   }
 
   return {
     numberOfELBs: resources.length,
-    price: await fetchPrice(region) as string
+    price: await fetchPrice() as string
   };
 }
 
-async function fetchPrice(region: string): Promise<string | undefined> {
+async function fetchPrice(): Promise<string | undefined> {
   try {
     const data = await client.getProducts({
       ServiceCode: "AmazonEC2",
@@ -29,11 +30,6 @@ async function fetchPrice(region: string): Promise<string | undefined> {
           'Type': 'TERM_MATCH',
           'Field': 'productFamily',
           'Value': 'Load Balancer'
-        },
-        {
-          'Type': 'TERM_MATCH',
-          Field: 'regionCode',
-          'Value': region
         },
         {
           'Type': 'TERM_MATCH',

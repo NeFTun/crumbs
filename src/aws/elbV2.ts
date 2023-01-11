@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/elb-v2-unused/resources.json';
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -9,19 +8,21 @@ export type ELBV2Pricing = {
   price: string,
 }
 
-export async function getReport(region: string): Promise<ELBV2Pricing | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<ELBV2Pricing | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/elb-v2-unused/resources.json`);
+
   if (resources.length === 0) {
     return;
   }
 
   return {
     numberOfELBs: resources.length,
-    price: await fetchPrice(region) as string
+    price: await fetchPrice() as string
   };
 }
 
 // Application ELB and Network ELB have the same price
-async function fetchPrice(region: string): Promise<string | undefined> {
+async function fetchPrice(): Promise<string | undefined> {
   try {
     const data = await client.getProducts({
       ServiceCode: "AmazonEC2",
@@ -30,11 +31,6 @@ async function fetchPrice(region: string): Promise<string | undefined> {
           'Type': 'TERM_MATCH',
           'Field': 'productFamily',
           'Value': "Load Balancer-Application"
-        },
-        {
-          'Type': 'TERM_MATCH',
-          Field: 'regionCode',
-          'Value': region
         },
         {
           'Type': 'TERM_MATCH',

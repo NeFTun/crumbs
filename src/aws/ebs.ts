@@ -1,6 +1,5 @@
 import * as AWS from "@aws-sdk/client-pricing";
-
-import resources from '../../output/orz/us-east-1/ebs-unattached/resources.json';
+import * as fs from 'fs-extra';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
@@ -10,7 +9,9 @@ export type VolumeTypePricing = {
   pricePerGB: string,
 }
 
-export async function getReport(region: string): Promise<VolumeTypePricing[] | undefined> {
+export async function getReport(resourceDir: string, region: string): Promise<VolumeTypePricing[] | undefined> {
+  const resources = fs.readJsonSync(`${resourceDir}/${region}/ebs-unattached/resources.json`);
+
   if (resources.length === 0) {
     return;
   }
