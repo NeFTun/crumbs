@@ -131,6 +131,20 @@ policies:
         value: 0
         op: equal
         missing-value: 0
+      - type: metrics
+        name: ReadThrottleEvents
+        statistics: Sum
+        days: 7
+        value: 0
+        op: equal
+        missing-value: 0
+      - type: metrics
+        name: ReturnedItemCount
+        statistics: Sum
+        days: 7
+        value: 0
+        op: equal
+        missing-value: 0
       - type: value
         value_type: age
         key: CreationDateTime
