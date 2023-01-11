@@ -58,18 +58,37 @@ policies:
   - name: elb-v2-unused
     resource: app-elb
     filters:
-      - type: metrics
-        name: ProcessedBytes
-        statistics: Sum
-        days: 3
-        value: 0
-        missing-value: 0
-        op: equal
-      - type: value
-        key: CreatedTime
-        value_type: age
-        op: ge
-        value: 3
+      - or:
+        - and:
+          - type: value
+            key: Type
+            value: application
+          - type: metrics
+            name: EstimatedProcessedBytes
+            statistics: Sum
+            value: 0
+            missing-value: 0
+            op: equal
+          - type: value
+            key: CreatedTime
+            value_type: age
+            op: ge
+            value: 3
+        - and:
+          - type: value
+            key: Type
+            value: network
+          - type: metrics
+            name: ProcessedBytes
+            statistics: Sum
+            value: 0
+            missing-value: 0
+            op: equal
+          - type: value
+            key: CreatedTime
+            value_type: age
+            op: ge
+            value: 3
 
 # RDS
 # Number of connections = 0 for 14 days
