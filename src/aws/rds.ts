@@ -4,11 +4,6 @@ import resources from '../../output/orz/us-east-1/rds-unused/resources.json';
 
 const client = new AWS.Pricing({ region: "us-east-1" });
 
-// TODO: Support more values
-const ENGINE_VERSION_MAP: { [engine: string]: string } = {
-  mysql: '5'
-};
-
 export type DBPricing = {
   DBInstanceId: string,
   price: number,
@@ -25,6 +20,12 @@ export async function getReport(region: string): Promise<DBPricing[] | undefined
     const instancePrice = await fetchInstancePrice(region, resource['DBInstanceClass'], resource['MultiAZ'], resource['Engine']);
     const storagePrice = await fetchStoragePrice(region, resource['MultiAZ'], resource['Engine']);
 
+    if (instancePrice === undefined || storagePrice === undefined) {
+      console.warn(`Unable to get cost of ${resource['DBInstanceIdentifier']}`);
+
+      continue;
+    }
+
     dbPricing.push({
       DBInstanceId: resource['DBInstanceIdentifier'],
       price: parseFloat(instancePrice as string) + parseFloat(storagePrice as string)
@@ -32,20 +33,6 @@ export async function getReport(region: string): Promise<DBPricing[] | undefined
   }
 
   return dbPricing;
-}
-
-function getInstanceTypeDistribution(instanceTypes: string[]): { [instanceType: string]: number } {
-  const result: { [instanceType: string]: number } = {};
-
-  for (const elem of instanceTypes) {
-    if (result[elem] === undefined) {
-      result[elem] = 1;
-    } else {
-      result[elem]++;
-    }
-  }
-
-  return result;
 }
 
 async function fetchInstancePrice(region: string, instanceType: string, isMultiAZ: boolean, engine: string): Promise<string | undefined> {
@@ -76,11 +63,15 @@ async function fetchInstancePrice(region: string, instanceType: string, isMultiA
         },
         {
           'Type': 'TERM_MATCH',
-          Field: 'engineCode',
-          'Value': ENGINE_VERSION_MAP[engine]
+          Field: 'databaseEngine',
+          'Value': engine
         }
       ]
     });
+
+    if (!data.PriceList?.length) {
+      return undefined;
+    }
 
     // @ts-ignore
     const priceList = JSON.parse(data.PriceList);
@@ -115,8 +106,8 @@ async function fetchStoragePrice(region: string, isMultiAZ: boolean, engine: str
         },
         {
           'Type': 'TERM_MATCH',
-          Field: 'engineCode',
-          'Value': ENGINE_VERSION_MAP[engine]
+          Field: 'databaseEngine',
+          'Value': engine
         },
         {
           'Type': 'TERM_MATCH',
@@ -131,6 +122,10 @@ async function fetchStoragePrice(region: string, isMultiAZ: boolean, engine: str
         }
       ]
     });
+
+    if (!data.PriceList?.length) {
+      return undefined;
+    }
 
     // @ts-ignore
     const priceList = JSON.parse(data.PriceList);

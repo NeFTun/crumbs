@@ -27,7 +27,7 @@ const REGION = 'us-east-1';
 
     console.log(`Total monthly cost: ${ec2Cost}$`);
 
-    totalCost += ec2Cost * HRS_IN_MONTH;
+    totalCost += ec2Cost;
   }
 
   // EBS
@@ -85,7 +85,7 @@ const REGION = 'us-east-1';
 
     console.log(`Total monthly cost: ${rdsCost}$`);
 
-    totalCost += rdsCost * HRS_IN_MONTH;
+    totalCost += rdsCost;
   }
 
   // Elasticache
