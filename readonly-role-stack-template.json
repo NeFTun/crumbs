@@ -1,0 +1,25 @@
+{
+  "Resources": {
+    "NeftunReadOnlyRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::529362207945:root"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/ReadOnlyAccess"
+        ],
+        "RoleName": "Neftun-readonly-access"
+      }
+    }
+  }
+}
