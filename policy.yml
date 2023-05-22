@@ -15,13 +15,6 @@ policies:
         days: 3
         op: ge
 
-# IAM role
-  - name: iam-role-unused
-    resource: iam-role
-    filters:
-      - type: used
-        state: false
-
 # EBS volume
   - name: ebs-unattached
     resource: ebs
